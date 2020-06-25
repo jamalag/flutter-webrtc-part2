@@ -24,6 +24,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_webrtc: ^0.2.8
+  sdp_transform: ^0.2.0
 
 
   # The following adds the Cupertino Icons font to your application.

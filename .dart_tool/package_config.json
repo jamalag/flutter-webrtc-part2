@@ -80,6 +80,11 @@
       "languageVersion": "2.0"
     },
     {
+      "name": "sdp_transform",
+      "rootUri": "file:///Users/amireshaq/DATA/tools/flutter/.pub-cache/hosted/pub.dartlang.org/sdp_transform-0.2.0",
+      "packageUri": "lib/"
+    },
+    {
       "name": "sky_engine",
       "rootUri": "file:///Users/amireshaq/DATA/tools/flutter/bin/cache/pkg/sky_engine",
       "packageUri": "lib/",
@@ -140,7 +145,7 @@
       "languageVersion": "2.7"
     }
   ],
-  "generated": "2020-06-20T20:59:35.696850Z",
+  "generated": "2020-06-23T19:26:28.211199Z",
   "generator": "pub",
   "generatorVersion": "2.9.0-14.1.beta"
 }
