@@ -4,10 +4,22 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-    
     {
-      "name": "Flutter",
+      "name": "Chrome",
       "request": "launch",
+      "deviceId": "Chrome",
+      "type": "dart"
+    },
+    {
+      "name": "iPhone",
+      "request": "launch",
+      "deviceId": "Amir Eshaq",
+      "type": "dart"
+    },
+    {
+      "name": "Android",
+      "request": "launch",
+      "deviceId": "ad0b1603a02724d3a9",
       "type": "dart"
     }
   ]

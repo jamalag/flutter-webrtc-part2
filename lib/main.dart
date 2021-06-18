@@ -1,8 +1,8 @@
 import 'dart:convert';
+// import 'dart:html';
 
 import 'package:flutter/material.dart';
-// import 'package:flutter_webrtc/web/rtc_session_description.dart';
-import 'package:flutter_webrtc/webrtc.dart';
+import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:sdp_transform/sdp_transform.dart';
 
 void main() {
@@ -10,7 +10,6 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -25,7 +24,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key? key, required this.title}) : super(key: key);
 
   final String title;
 
@@ -34,10 +33,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-
   bool _offer = false;
-  RTCPeerConnection _peerConnection;
-  MediaStream _localStream;
+  RTCPeerConnection? _peerConnection;
+  MediaStream? _localStream;
   RTCVideoRenderer _localRenderer = new RTCVideoRenderer();
   RTCVideoRenderer _remoteRenderer = new RTCVideoRenderer();
 
@@ -53,72 +51,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    initRenderers();
-    _createPeerConnection().then((pc) {
+    initRenderer();
+    _createPeerConnecion().then((pc) {
       _peerConnection = pc;
     });
+    // _getUserMedia();
     super.initState();
   }
 
-  initRenderers() async {
+  initRenderer() async {
     await _localRenderer.initialize();
     await _remoteRenderer.initialize();
   }
 
-  void _createOffer() async {
-    RTCSessionDescription description =
-        await _peerConnection.createOffer({'offerToReceiveVideo': 1});
-    var session = parse(description.sdp);
-    print(json.encode(session));
-    _offer = true;
-
-    // print(json.encode({
-    //       'sdp': description.sdp.toString(),
-    //       'type': description.type.toString(),
-    //     }));
-
-    _peerConnection.setLocalDescription(description);
-  }
-
-  void _createAnswer() async {
-    RTCSessionDescription description =
-        await _peerConnection.createAnswer({'offerToReceiveVideo': 1});
-
-    var session = parse(description.sdp);
-    print(json.encode(session));
-    // print(json.encode({
-    //       'sdp': description.sdp.toString(),
-    //       'type': description.type.toString(),
-    //     }));
-
-    _peerConnection.setLocalDescription(description);
-  }
-
-  void _setRemoteDescription() async {
-    String jsonString = sdpController.text;
-    dynamic session = await jsonDecode('$jsonString');
-
-    String sdp = write(session, null);
-
-    // RTCSessionDescription description =
-    //     new RTCSessionDescription(session['sdp'], session['type']);
-    RTCSessionDescription description =
-        new RTCSessionDescription(sdp, _offer ? 'answer' : 'offer');
-    print(description.toMap());
-
-    await _peerConnection.setRemoteDescription(description);
-  }
-
-  void _addCandidate() async {
-    String jsonString = sdpController.text;
-    dynamic session = await jsonDecode('$jsonString');
-    print(session['candidate']);
-    dynamic candidate =
-        new RTCIceCandidate(session['candidate'], session['sdpMid'], session['sdpMlineIndex']);
-    await _peerConnection.addCandidate(candidate);
-  }
-
-  _createPeerConnection() async {
+  _createPeerConnecion() async {
     Map<String, dynamic> configuration = {
       "iceServers": [
         {"url": "stun:stun.l.google.com:19302"},
@@ -135,9 +81,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
     _localStream = await _getUserMedia();
 
-    RTCPeerConnection pc = await createPeerConnection(configuration, offerSdpConstraints);
-    // if (pc != null) print(pc);
-    pc.addStream(_localStream);
+    RTCPeerConnection pc =
+        await createPeerConnection(configuration, offerSdpConstraints);
+
+    pc.addStream(_localStream!);
 
     pc.onIceCandidate = (e) {
       if (e.candidate != null) {
@@ -162,22 +109,72 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _getUserMedia() async {
-    final Map<String, dynamic> mediaConstraints = {
+    final Map<String, dynamic> constraints = {
       'audio': false,
       'video': {
         'facingMode': 'user',
       },
     };
 
-    MediaStream stream = await navigator.getUserMedia(mediaConstraints);
+    MediaStream stream = await navigator.mediaDevices.getUserMedia(constraints);
 
-    // _localStream = stream;
     _localRenderer.srcObject = stream;
-    _localRenderer.mirror = true;
-
-    // _peerConnection.addStream(stream);
+    // _localRenderer.mirror = true;
 
     return stream;
+  }
+
+  void _createOffer() async {
+    RTCSessionDescription description =
+        await _peerConnection!.createOffer({'offerToReceiveVideo': 1});
+    var session = parse(description.sdp.toString());
+    print(json.encode(session));
+    _offer = true;
+
+    // print(json.encode({
+    //       'sdp': description.sdp.toString(),
+    //       'type': description.type.toString(),
+    //     }));
+
+    _peerConnection!.setLocalDescription(description);
+  }
+
+  void _createAnswer() async {
+    RTCSessionDescription description =
+        await _peerConnection!.createAnswer({'offerToReceiveVideo': 1});
+
+    var session = parse(description.sdp.toString());
+    print(json.encode(session));
+    // print(json.encode({
+    //       'sdp': description.sdp.toString(),
+    //       'type': description.type.toString(),
+    //     }));
+
+    _peerConnection!.setLocalDescription(description);
+  }
+
+  void _setRemoteDescription() async {
+    String jsonString = sdpController.text;
+    dynamic session = await jsonDecode('$jsonString');
+
+    String sdp = write(session, null);
+
+    // RTCSessionDescription description =
+    //     new RTCSessionDescription(session['sdp'], session['type']);
+    RTCSessionDescription description =
+        new RTCSessionDescription(sdp, _offer ? 'answer' : 'offer');
+    print(description.toMap());
+
+    await _peerConnection!.setRemoteDescription(description);
+  }
+
+  void _addCandidate() async {
+    String jsonString = sdpController.text;
+    dynamic session = await jsonDecode('$jsonString');
+    print(session['candidate']);
+    dynamic candidate =
+        new RTCIceCandidate(session['candidate'], session['sdpMid'], session['sdpMlineIndex']);
+    await _peerConnection!.addCandidate(candidate);
   }
 
   SizedBox videoRenderers() => SizedBox(
@@ -185,11 +182,10 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Row(children: [
         Flexible(
           child: new Container(
-            key: new Key("local"),
-            margin: new EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 5.0),
-            decoration: new BoxDecoration(color: Colors.black),
-            child: new RTCVideoView(_localRenderer)
-          ),
+              key: new Key("local"),
+              margin: new EdgeInsets.fromLTRB(5.0, 5.0, 5.0, 5.0),
+              decoration: new BoxDecoration(color: Colors.black),
+              child: new RTCVideoView(_localRenderer)),
         ),
         Flexible(
           child: new Container(
@@ -202,7 +198,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Row offerAndAnswerButtons() =>
       Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: <Widget>[
-        new RaisedButton(
+        new ElevatedButton(
           // onPressed: () {
           //   return showDialog(
           //       context: context,
@@ -214,26 +210,26 @@ class _MyHomePageState extends State<MyHomePage> {
           // },
           onPressed: _createOffer,
           child: Text('Offer'),
-          color: Colors.amber,
+          // color: Colors.amber,
         ),
-        RaisedButton(
+        ElevatedButton(
           onPressed: _createAnswer,
           child: Text('Answer'),
-          color: Colors.amber,
+          style: ElevatedButton.styleFrom(primary: Colors.amber),
         ),
       ]);
 
   Row sdpCandidateButtons() =>
       Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: <Widget>[
-        RaisedButton(
+        ElevatedButton(
           onPressed: _setRemoteDescription,
           child: Text('Set Remote Desc'),
-          color: Colors.amber,
+          // color: Colors.amber,
         ),
-        RaisedButton(
+        ElevatedButton(
           onPressed: _addCandidate,
           child: Text('Add Candidate'),
-          color: Colors.amber,
+          // color: Colors.amber,
         )
       ]);
 
@@ -254,11 +250,28 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text(widget.title),
         ),
         body: Container(
-            child: Column(children: [
-          videoRenderers(),
-          offerAndAnswerButtons(),
-          sdpCandidatesTF(),
-          sdpCandidateButtons(),
-        ])));
+            child: Container(
+                child: Column(
+          children: [
+            videoRenderers(),
+            offerAndAnswerButtons(),
+            sdpCandidatesTF(),
+            sdpCandidateButtons(),
+          ],
+        ))
+            // new Stack(
+            //   children: [
+            //     new Positioned(
+            //       top: 0.0,
+            //       right: 0.0,
+            //       left: 0.0,
+            //       bottom: 0.0,
+            //       child: new Container(
+            //         child: new RTCVideoView(_localRenderer)
+            //       )
+            //     )
+            //   ],
+            // ),
+            ));
   }
 }
